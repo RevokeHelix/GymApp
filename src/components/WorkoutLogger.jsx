@@ -144,7 +144,7 @@ export default function WorkoutLogger() {
           onBlur={e => { e.target.style.borderColor = 'var(--border-2)' }}
         />
 
-        <div style={{ marginTop: 10 }}>
+        <div style={{ marginTop: 10, overflow: 'hidden' }}>
           <div style={{
             fontFamily: 'var(--mono)',
             fontSize: 10,
@@ -157,6 +157,7 @@ export default function WorkoutLogger() {
           <input
             type="date"
             style={{
+              display: 'block',
               background: 'var(--surface)',
               border: '1px solid var(--border-2)',
               borderRadius: 8,
@@ -165,6 +166,7 @@ export default function WorkoutLogger() {
               fontSize: 14,
               fontFamily: 'var(--mono)',
               width: '100%',
+              maxWidth: '100%',
               outline: 'none',
               colorScheme: 'dark',
             }}

@@ -62,6 +62,8 @@ export default function Auth() {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '24px 20px',
+      paddingTop: 'calc(24px + env(safe-area-inset-top))',
+      paddingBottom: 'calc(24px + env(safe-area-inset-bottom))',
     }}>
       {/* Logo */}
       <div style={{ textAlign: 'center', marginBottom: 36 }}>

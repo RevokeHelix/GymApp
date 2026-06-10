@@ -112,6 +112,7 @@ export default function App() {
       <header style={{
         background: 'var(--surface)',
         padding: '13px 16px 11px',
+        paddingTop: 'calc(13px + env(safe-area-inset-top))',
         borderBottom: '1px solid var(--border)',
         display: 'flex', alignItems: 'center',
         justifyContent: 'space-between', flexShrink: 0,
