@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap');
+@import "tailwindcss";
+
+:root {
+  --bg:           #0c0c0e;
+  --surface:      #131315;
+  --surface-2:    #1a1a1d;
+  --surface-3:    #222226;
+  --surface-4:    #2a2a2f;
+  --border:       #242428;
+  --border-2:     #32323a;
+  --text:         #e6e6ea;
+  --text-muted:   #6a6a76;
+  --text-dim:     #3a3a44;
+  --accent:       #f97316;
+  --accent-hi:    #fb923c;
+  --accent-glow:  rgba(249, 115, 22, 0.18);
+  --accent-dim:   rgba(249, 115, 22, 0.07);
+  --green:        #22c55e;
+  --green-glow:   rgba(34, 197, 94, 0.15);
+  --red:          #ef4444;
+  --blue:         #3b82f6;
+  --mono:         'DM Mono', 'Courier New', monospace;
+  --display:      'Bebas Neue', 'Arial Narrow', sans-serif;
+  --body:         'Barlow', system-ui, sans-serif;
+  --radius:       10px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: var(--body);
+  font-size: 15px;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+}
+
+#root {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+input, select, textarea, button {
+  font-family: var(--body);
+}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+input[type=number] { -moz-appearance: textfield; }
+
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 2px; }
+
+/* ── Keyframes ─────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@keyframes pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+@keyframes barGrow {
+  from { width: 0; }
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.fade-up    { animation: fadeUp 0.28s cubic-bezier(0.4, 0, 0.2, 1) both; }
+.slide-up   { animation: slideUp 0.38s cubic-bezier(0.32, 0.72, 0, 1) both; }
+.pop        { animation: pop 0.22s ease both; }
+
+/* ── Staggered entry delays ─────────────────────── */
+.delay-1 { animation-delay: 0.04s; }
+.delay-2 { animation-delay: 0.08s; }
+.delay-3 { animation-delay: 0.12s; }
+.delay-4 { animation-delay: 0.16s; }
+.delay-5 { animation-delay: 0.20s; }
+
+/* ── Sheet overlay ──────────────────────────────── */
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+}
+.sheet-panel {
+  width: 100%;
+  max-height: 88svh;
+  background: var(--surface);
+  border-top: 1px solid var(--border-2);
+  border-radius: 16px 16px 0 0;
+  overflow-y: auto;
+  animation: slideUp 0.38s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
