@@ -4,6 +4,9 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  define: {
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -11,11 +14,11 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icons/*.png'],
       manifest: {
-        name: 'GymTracker',
-        short_name: 'GymTracker',
-        description: 'Track your workouts offline',
-        theme_color: '#1d4ed8',
-        background_color: '#0f172a',
+        name: 'Forge Gym',
+        short_name: 'Forge',
+        description: 'Track every rep',
+        theme_color: '#0c0c0e',
+        background_color: '#0c0c0e',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',

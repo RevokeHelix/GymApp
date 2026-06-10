@@ -65,6 +65,10 @@ export default function Profile() {
 
   if (loading) return <Loader />
 
+  const buildDate = new Date(__BUILD_TIME__)
+  const buildLabel = buildDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+    + ' · ' + buildDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+
   const bmiVal = profile.weight && profile.height
     ? Number(profile.weight) / Math.pow(Number(profile.height) / 100, 2)
     : null
@@ -263,6 +267,18 @@ export default function Profile() {
         >
           {saved ? '✓ SAVED' : 'SAVE PROFILE'}
         </button>
+      </div>
+
+      <div style={{
+        textAlign: 'center',
+        marginTop: 8,
+        marginBottom: 8,
+        fontFamily: 'var(--mono)',
+        fontSize: 10,
+        color: 'var(--text-dim)',
+        letterSpacing: '0.08em',
+      }}>
+        BUILD · {buildLabel}
       </div>
     </div>
   )
