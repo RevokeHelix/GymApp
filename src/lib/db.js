@@ -93,6 +93,32 @@ export async function deleteWorkout(workoutId) {
   await supabase.from('workouts').delete().eq('id', workoutId)
 }
 
+/* ── weight entries ───────────────────────────── */
+export async function getWeightEntries() {
+  const id = await uid()
+  if (!id) return []
+  const { data, error } = await supabase
+    .from('weight_entries')
+    .select('id, date, weight')
+    .eq('user_id', id)
+    .order('date', { ascending: true })
+  if (error) { console.error(error); return [] }
+  return data ?? []
+}
+
+export async function addWeightEntry(date, weight) {
+  const id = await uid()
+  if (!id) return
+  await supabase.from('weight_entries').upsert(
+    { user_id: id, date, weight: Number(weight) },
+    { onConflict: 'user_id,date' }
+  )
+}
+
+export async function deleteWeightEntry(entryId) {
+  await supabase.from('weight_entries').delete().eq('id', entryId)
+}
+
 /* ── user templates ───────────────────────────── */
 export async function getUserTemplates() {
   const id = await uid()

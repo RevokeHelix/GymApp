@@ -53,6 +53,22 @@ CREATE POLICY "templates_all" ON user_templates FOR ALL
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
+-- ── Weight Entries ──────────────────────────────────────────────────────────
+-- One entry per user per day; weight in kg
+CREATE TABLE IF NOT EXISTS weight_entries (
+  id         UUID        DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id    UUID        REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  date       DATE        NOT NULL,
+  weight     NUMERIC(5,2) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (user_id, date)
+);
+
+ALTER TABLE weight_entries ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "weight_all" ON weight_entries FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
 -- ── Clean up any previous trigger (profile is created by app code instead) ──
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 DROP FUNCTION IF EXISTS public.handle_new_user();
