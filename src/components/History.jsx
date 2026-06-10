@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getWorkouts, deleteWorkout } from '../lib/db'
+import Loader from './Loader'
 
 function workoutVolume(workout) {
   return workout.exercises.reduce((sum, e) =>
@@ -18,9 +19,13 @@ function formatYear(iso) {
 
 export default function History() {
   const [workouts, setWorkouts] = useState([])
-  const [expanded, setExpanded]  = useState(null)
+  const [expanded, setExpanded] = useState(null)
+  const [loading, setLoading]   = useState(true)
 
-  const load = useCallback(async () => { setWorkouts(await getWorkouts()) }, [])
+  const load = useCallback(async () => {
+    setWorkouts(await getWorkouts())
+    setLoading(false)
+  }, [])
   useEffect(() => { load() }, [load])
 
   async function handleDelete(id) {
@@ -28,6 +33,8 @@ export default function History() {
     await deleteWorkout(id)
     await load()
   }
+
+  if (loading) return <Loader />
 
   if (workouts.length === 0) {
     return (

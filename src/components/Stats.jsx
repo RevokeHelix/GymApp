@@ -5,6 +5,7 @@ import {
   ResponsiveContainer, ReferenceLine, Cell,
 } from 'recharts'
 import { getWorkouts } from '../lib/db'
+import Loader from './Loader'
 
 /* ═══════════════════════════════════════════════════
    STATISTICAL UTILITIES
@@ -279,10 +280,15 @@ function RecommendationCard({ recs }) {
    ═══════════════════════════════════════════════════ */
 
 export default function Stats() {
-  const [workouts, setWorkouts]   = useState([])
+  const [workouts, setWorkouts]     = useState([])
+  const [loading, setLoading]       = useState(true)
   const [selectedEx, setSelectedEx] = useState(null)
 
-  useEffect(() => { getWorkouts().then(setWorkouts) }, [])
+  useEffect(() => {
+    getWorkouts().then(data => { setWorkouts(data); setLoading(false) })
+  }, [])
+
+  if (loading) return <Loader />
 
   if (workouts.length === 0) {
     return (

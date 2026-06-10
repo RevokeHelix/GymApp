@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getProfile, saveProfile } from '../lib/db'
+import Loader from './Loader'
 
 const GOALS = [
   'Build Muscle',
@@ -48,8 +49,11 @@ const inputStyle = {
 export default function Profile() {
   const [profile, setProfile] = useState({ name: '', weight: '', height: '', age: '', goal: 'Build Muscle' })
   const [saved, setSaved]     = useState(false)
+  const [loading, setLoading] = useState(true)
 
-  useEffect(() => { getProfile().then(setProfile) }, [])
+  useEffect(() => {
+    getProfile().then(data => { setProfile(data); setLoading(false) })
+  }, [])
 
   function update(field, value) { setProfile(p => ({ ...p, [field]: value })) }
 
@@ -58,6 +62,8 @@ export default function Profile() {
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
+
+  if (loading) return <Loader />
 
   const bmiVal = profile.weight && profile.height
     ? Number(profile.weight) / Math.pow(Number(profile.height) / 100, 2)
