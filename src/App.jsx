@@ -105,8 +105,9 @@ export default function App() {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column',
-      minHeight: '100svh', maxWidth: 640,
+      height: '100svh', maxWidth: 640,
       margin: '0 auto', width: '100%',
+      overflow: 'hidden',
     }}>
       {/* Header */}
       <header style={{
@@ -167,7 +168,7 @@ export default function App() {
       <nav style={{
         background: 'var(--surface)',
         borderTop: '1px solid var(--border)',
-        display: 'flex', position: 'sticky', bottom: 0, flexShrink: 0,
+        display: 'flex', flexShrink: 0,
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}>
         {NAV.map(tab => {
