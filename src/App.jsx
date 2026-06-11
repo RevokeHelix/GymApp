@@ -65,7 +65,7 @@ function LoadingScreen() {
       <div style={{
         fontFamily: 'var(--display)', fontSize: 48,
         letterSpacing: '0.08em', color: 'var(--text)', lineHeight: 1,
-      }}>FORGE</div>
+      }}>GYMSTOCK</div>
       <div style={{
         width: 32, height: 3, background: 'var(--surface-3)',
         borderRadius: 2, overflow: 'hidden', position: 'relative',
@@ -122,11 +122,11 @@ export default function App() {
           <span style={{
             fontFamily: 'var(--display)', fontSize: 24,
             letterSpacing: '0.04em', color: 'var(--text)', lineHeight: 1,
-          }}>FORGE</span>
+          }}>GYM</span>
           <span style={{
             fontFamily: 'var(--mono)', fontSize: 10,
             color: 'var(--accent)', letterSpacing: '0.12em',
-          }}>GYM</span>
+          }}>STOCK</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
