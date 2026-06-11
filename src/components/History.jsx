@@ -3,8 +3,10 @@ import { getWorkouts, deleteWorkout } from '../lib/db'
 import Loader from './Loader'
 
 function workoutVolume(workout) {
-  return workout.exercises.reduce((sum, e) =>
-    sum + e.sets.reduce((s2, s) => s2 + s.reps * s.weight, 0), 0)
+  return workout.exercises.reduce((sum, e) => {
+    if (!Array.isArray(e.sets)) return sum
+    return sum + e.sets.reduce((s2, s) => s2 + (Number(s.reps) || 0) * (Number(s.weight) || 0), 0)
+  }, 0)
 }
 
 function formatDate(iso) {

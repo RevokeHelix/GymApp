@@ -49,7 +49,7 @@ function brzycki(weight, reps) {
 // Highest estimated 1RM across a set of sets
 function bestOneRM(sets) {
   return sets.reduce((best, s) => {
-    const est = brzycki(s.weight, s.reps)
+    const est = brzycki(Number(s.weight) || 0, Number(s.reps) || 0)
     return est > best ? est : best
   }, 0)
 }
@@ -73,10 +73,10 @@ function consistencyScore(weekCounts) {
 
 // Total lifted volume for one workout
 function workoutVolume(w) {
-  return w.exercises.reduce(
-    (sum, e) => sum + e.sets.reduce((s2, s) => s2 + s.reps * s.weight, 0),
-    0
-  )
+  return w.exercises.reduce((sum, e) => {
+    if (!Array.isArray(e.sets)) return sum
+    return sum + e.sets.reduce((s2, s) => s2 + (Number(s.reps) || 0) * (Number(s.weight) || 0), 0)
+  }, 0)
 }
 
 /* ═══════════════════════════════════════════════════
@@ -363,11 +363,12 @@ export default function Stats() {
   const exStats = {}
   chrono.forEach(w => {
     w.exercises.forEach(e => {
+      if (!Array.isArray(e.sets)) return
       if (!exStats[e.name]) {
         exStats[e.name] = { totalVol: 0, sessions: 0, maxWeight: 0, best1RM: 0, history: [] }
       }
-      const vol  = e.sets.reduce((s, set) => s + set.reps * set.weight, 0)
-      const maxW = e.sets.reduce((m, s) => Math.max(m, s.weight), 0)
+      const vol  = e.sets.reduce((s, set) => s + (Number(set.reps) || 0) * (Number(set.weight) || 0), 0)
+      const maxW = e.sets.reduce((m, s) => Math.max(m, Number(s.weight) || 0), 0)
       const b1rm = bestOneRM(e.sets)
       const ex   = exStats[e.name]
       ex.totalVol   += vol
