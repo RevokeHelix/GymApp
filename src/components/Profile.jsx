@@ -31,6 +31,15 @@ function movingAvg(arr, w) {
   )
 }
 
+/* ── Period filter ─────────────────────────────────── */
+
+const WEIGHT_PERIODS = ['1M', '3M', '6M', '1Y', 'ALL']
+function weightCutoff(p) {
+  if (p === 'ALL') return null
+  const days = { '1M': 30, '3M': 90, '6M': 180, '1Y': 365 }[p]
+  return new Date(Date.now() - days * 86400000).toISOString().split('T')[0]
+}
+
 /* ── Constants ─────────────────────────────────────── */
 
 const GOALS = ['Build Muscle', 'Lose Fat', 'Increase Strength', 'Improve Endurance', 'Stay Active']
@@ -110,6 +119,7 @@ function WeightTracker() {
   const [date, setDate]         = useState(() => new Date().toISOString().split('T')[0])
   const [weight, setWeight]     = useState('')
   const [saving, setSaving]     = useState(false)
+  const [period, setPeriod]     = useState('ALL')
 
   async function load() {
     setEntries(await getWeightEntries())
@@ -133,15 +143,17 @@ function WeightTracker() {
   }
 
   /* ── Derived stats ──────────────────────────────── */
-  const n = entries.length
+  const cutoffDate = weightCutoff(period)
+  const vis = cutoffDate ? entries.filter(e => e.date >= cutoffDate) : entries
 
-  // Convert dates to days from first entry for regression
-  const firstMs  = n > 0 ? new Date(entries[0].date).getTime() : 0
-  const dayDeltas = entries.map(e => (new Date(e.date).getTime() - firstMs) / 86400000)
-  const weights   = entries.map(e => Number(e.weight))
+  const n = vis.length
+
+  const firstMs   = n > 0 ? new Date(vis[0].date).getTime() : 0
+  const dayDeltas = vis.map(e => (new Date(e.date).getTime() - firstMs) / 86400000)
+  const weights   = vis.map(e => Number(e.weight))
 
   const reg  = n >= 2 ? linReg(dayDeltas, weights) : null
-  const slopePerWeek = reg ? reg.slope * 7 : 0  // kg/week
+  const slopePerWeek = reg ? reg.slope * 7 : 0
 
   const MA_W = Math.max(2, Math.min(3, Math.floor(n / 2)))
   const maVals = n >= 2 ? movingAvg(weights, MA_W) : []
@@ -150,11 +162,10 @@ function WeightTracker() {
   const start   = n > 0 ? weights[0] : null
   const change  = current !== null && start !== null ? current - start : null
 
-  // Chart data
-  const chartData = entries.map((e, i) => ({
+  const chartData = vis.map((e, i) => ({
     d:     shortDate(e.date),
     kg:    Number(e.weight),
-    ma:    maVals[i] !== null && maVals[i] !== undefined ? parseFloat(maVals[i].toFixed(2)) : undefined,
+    ma:    maVals[i] != null ? parseFloat(maVals[i].toFixed(2)) : undefined,
     trend: reg ? parseFloat((reg.slope * dayDeltas[i] + reg.intercept).toFixed(2)) : undefined,
   }))
 
@@ -272,6 +283,31 @@ function WeightTracker() {
           {/* Chart — only with 2+ entries */}
           {n >= 2 && (
             <>
+              {/* Period picker */}
+              <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
+                {WEIGHT_PERIODS.map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setPeriod(p)}
+                    style={{
+                      flex: 1,
+                      fontFamily: 'var(--mono)',
+                      fontSize: 11,
+                      letterSpacing: '0.08em',
+                      padding: '6px 0',
+                      borderRadius: 6,
+                      border: `1px solid ${period === p ? '#f97316' : 'var(--border)'}`,
+                      background: period === p ? 'rgba(249,115,22,0.12)' : 'transparent',
+                      color: period === p ? '#f97316' : 'var(--text-muted)',
+                      cursor: 'pointer',
+                      transition: 'all 0.12s',
+                    }}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+
               <div style={{
                 display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 10,
                 fontFamily: 'var(--mono)', fontSize: 11,
@@ -294,6 +330,7 @@ function WeightTracker() {
                     dataKey="d"
                     tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'var(--mono)' }}
                     axisLine={false} tickLine={false}
+                    interval="preserveStartEnd"
                   />
                   <YAxis
                     domain={[yMin, yMax]}

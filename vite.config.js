@@ -14,8 +14,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icons/*.png'],
       manifest: {
-        name: 'Forge Gym',
-        short_name: 'Forge',
+        name: 'GymStock',
+        short_name: 'GymStock',
         description: 'Track every rep',
         theme_color: '#0c0c0e',
         background_color: '#0c0c0e',
