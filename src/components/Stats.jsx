@@ -7,6 +7,13 @@ import {
 import { getWorkouts } from '../lib/db'
 import Loader from './Loader'
 
+const PERIODS = ['1W', '1M', '3M', '1Y', 'ALL']
+function periodCutoff(p) {
+  if (p === 'ALL') return null
+  const days = { '1W': 7, '1M': 30, '3M': 90, '1Y': 365 }[p]
+  return new Date(Date.now() - days * 86400000)
+}
+
 /* ═══════════════════════════════════════════════════
    STATISTICAL UTILITIES
    ═══════════════════════════════════════════════════ */
@@ -242,6 +249,34 @@ function StatCard({ value, label, sub, accent, idx }) {
   )
 }
 
+function PeriodPicker({ value, onChange }) {
+  return (
+    <div style={{ display: 'flex', gap: 4, marginBottom: 14 }}>
+      {PERIODS.map(p => (
+        <button
+          key={p}
+          onClick={() => onChange(p)}
+          style={{
+            flex: 1,
+            fontFamily: 'var(--mono)',
+            fontSize: 11,
+            letterSpacing: '0.08em',
+            padding: '7px 0',
+            borderRadius: 6,
+            border: `1px solid ${value === p ? '#f97316' : 'var(--border)'}`,
+            background: value === p ? 'rgba(249,115,22,0.12)' : 'transparent',
+            color: value === p ? '#f97316' : 'var(--text-muted)',
+            cursor: 'pointer',
+            transition: 'all 0.12s',
+          }}
+        >
+          {p}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 function TrendBadge({ slope, threshold = 0.3 }) {
   if (slope > threshold)  return <span style={{ color: '#22c55e', fontWeight: 700, fontSize: 18 }}>↑</span>
   if (slope < -threshold) return <span style={{ color: '#ef4444', fontWeight: 700, fontSize: 18 }}>↓</span>
@@ -283,6 +318,7 @@ export default function Stats() {
   const [workouts, setWorkouts]     = useState([])
   const [loading, setLoading]       = useState(true)
   const [selectedEx, setSelectedEx] = useState(null)
+  const [period, setPeriod]         = useState('ALL')
 
   useEffect(() => {
     getWorkouts().then(data => { setWorkouts(data); setLoading(false) })
@@ -300,15 +336,17 @@ export default function Stats() {
     )
   }
 
-  /* ── Sort chronologically for regression ─────────── */
-  const chrono = [...workouts].sort((a, b) => new Date(a.date) - new Date(b.date))
+  /* ── Sort chronologically, then filter by period ─── */
+  const chrono   = [...workouts].sort((a, b) => new Date(a.date) - new Date(b.date))
+  const cutoff   = periodCutoff(period)
+  const filtered = cutoff ? chrono.filter(w => new Date(w.date) >= cutoff) : chrono
 
   /* ── Global aggregates ───────────────────────────── */
-  const totalWorkouts  = workouts.length
-  const totalVolume    = workouts.reduce((s, w) => s + workoutVolume(w), 0)
-  const totalSets      = workouts.reduce((s, w) => s + w.exercises.reduce((s2, e) => s2 + e.sets.length, 0), 0)
+  const totalWorkouts  = filtered.length
+  const totalVolume    = filtered.reduce((s, w) => s + workoutVolume(w), 0)
+  const totalSets      = filtered.reduce((s, w) => s + w.exercises.reduce((s2, e) => s2 + (Array.isArray(e.sets) ? e.sets.length : 0), 0), 0)
 
-  const volumes = chrono.map(workoutVolume)
+  const volumes = filtered.map(workoutVolume)
   const { mean: avgVol, std: stdVol } = meanStd(volumes)
 
   /* ── Linear regression on session volume ─────────── */
@@ -318,24 +356,23 @@ export default function Stats() {
   const nextPred = Math.max(0, reg.slope * volumes.length + reg.intercept)
 
   const volumeChartData = [
-    ...chrono.map((w, i) => ({
+    ...filtered.map((w, i) => ({
       d:     shortDate(w.date),
       vol:   volumes[i],
       ma:    maVals[i] !== null ? Math.round(maVals[i]) : undefined,
       trend: Math.round(reg.slope * i + reg.intercept),
     })),
     { d: 'NEXT', vol: undefined, ma: undefined, trend: Math.round(nextPred), isPred: true },
-  ].slice(-15)
+  ]
 
   /* ── Sessions per week ───────────────────────────── */
   const weekSessionMap = {}
-  workouts.forEach(w => {
+  filtered.forEach(w => {
     const k = isoWeekKey(w.date)
     weekSessionMap[k] = (weekSessionMap[k] || 0) + 1
   })
   const weekData = Object.entries(weekSessionMap)
     .sort(([a], [b]) => a.localeCompare(b))
-    .slice(-8)
     .map(([k, count]) => ({ week: `W${k.split('-')[1]}`, count }))
 
   const weekCounts = weekData.map(d => d.count)
@@ -344,13 +381,12 @@ export default function Stats() {
 
   /* ── Weekly volume ───────────────────────────────── */
   const weekVolMap = {}
-  workouts.forEach(w => {
+  filtered.forEach(w => {
     const k = isoWeekKey(w.date)
     weekVolMap[k] = (weekVolMap[k] || 0) + workoutVolume(w)
   })
   const weekVolData = Object.entries(weekVolMap)
     .sort(([a], [b]) => a.localeCompare(b))
-    .slice(-8)
     .map(([k, vol]) => ({ week: `W${k.split('-')[1]}`, vol }))
 
   const weekVolReg = linearRegression(weekVolData.map(d => d.vol))
@@ -361,7 +397,7 @@ export default function Stats() {
 
   /* ── Per-exercise statistics ─────────────────────── */
   const exStats = {}
-  chrono.forEach(w => {
+  filtered.forEach(w => {
     w.exercises.forEach(e => {
       if (!Array.isArray(e.sets)) return
       if (!exStats[e.name]) {
@@ -402,7 +438,7 @@ export default function Stats() {
   /* ── Volume by day of week ───────────────────────── */
   const dayVolAcc = [0, 0, 0, 0, 0, 0, 0]
   const dayCntAcc = [0, 0, 0, 0, 0, 0, 0]
-  workouts.forEach(w => {
+  filtered.forEach(w => {
     const dow = new Date(w.date).getDay()
     dayVolAcc[dow] += workoutVolume(w)
     dayCntAcc[dow] += 1
@@ -425,6 +461,15 @@ export default function Stats() {
      ═══════════════════════════════════════════════════ */
   return (
     <div style={{ maxWidth: 600, margin: '0 auto' }}>
+
+      {/* ─── Period picker ─── */}
+      <PeriodPicker value={period} onChange={p => { setPeriod(p); setSelectedEx(null) }} />
+
+      {filtered.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)', fontFamily: 'var(--mono)', fontSize: 12 }}>
+          No workouts in this period — try a longer range
+        </div>
+      )}
 
       {/* ─── Summary cards ─── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
@@ -487,6 +532,7 @@ export default function Stats() {
                 dataKey="d"
                 tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'var(--mono)' }}
                 axisLine={false} tickLine={false}
+                interval="preserveStartEnd"
               />
               <YAxis
                 tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'var(--mono)' }}
@@ -535,7 +581,7 @@ export default function Stats() {
           idx={4}
           value={totalSets}
           label="TOTAL SETS"
-          sub={`${(totalSets / totalWorkouts).toFixed(1)} sets/session`}
+          sub={totalWorkouts > 0 ? `${(totalSets / totalWorkouts).toFixed(1)} sets/session` : undefined}
         />
       </div>
 
@@ -684,7 +730,7 @@ export default function Stats() {
       {/* ─── Sessions per week ─── */}
       {weekData.length > 1 && (
         <div className="fade-up delay-5" style={CARD}>
-          <div style={SECTION_LABEL}>SESSIONS / WEEK — LAST 8 WEEKS</div>
+          <div style={SECTION_LABEL}>SESSIONS / WEEK{period !== 'ALL' ? ` — ${period}` : ''}</div>
           <div style={{ fontFamily: 'var(--mono)', fontSize: 11, marginBottom: 10 }}>
             <span style={{ color: 'var(--text-muted)' }}>CONSISTENCY </span>
             <span style={{ color: consistency >= 0.7 ? '#22c55e' : consistency >= 0.5 ? '#eab308' : '#ef4444', fontWeight: 700 }}>
@@ -700,6 +746,7 @@ export default function Stats() {
                 dataKey="week"
                 tick={{ fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'var(--mono)' }}
                 axisLine={false} tickLine={false}
+                interval="preserveStartEnd"
               />
               <YAxis
                 allowDecimals={false}
@@ -745,6 +792,7 @@ export default function Stats() {
                 dataKey="week"
                 tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'var(--mono)' }}
                 axisLine={false} tickLine={false}
+                interval="preserveStartEnd"
               />
               <YAxis
                 tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'var(--mono)' }}
@@ -762,7 +810,7 @@ export default function Stats() {
       )}
 
       {/* ─── Volume by day of week ─── */}
-      {totalWorkouts >= 5 && (
+      {filtered.length >= 5 && (
         <div className="fade-up delay-5" style={CARD}>
           <div style={SECTION_LABEL}>AVG VOLUME BY DAY OF WEEK</div>
           <ResponsiveContainer width="100%" height={120}>
