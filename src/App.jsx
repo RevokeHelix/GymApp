@@ -157,7 +157,11 @@ export default function App() {
       </header>
 
       {/* Main */}
-      <main style={{ flex: 1, overflow: 'auto', padding: '16px 16px 8px' }}>
+      <main style={{
+        flex: 1, overflow: 'auto',
+        padding: '16px 16px 8px',
+        paddingBottom: 'calc(60px + env(safe-area-inset-bottom))',
+      }}>
         {activeTab === 'logger'  && <WorkoutLogger />}
         {activeTab === 'history' && <History />}
         {activeTab === 'stats'   && <Stats />}
@@ -166,10 +170,14 @@ export default function App() {
 
       {/* Bottom Nav */}
       <nav style={{
+        position: 'fixed', bottom: 0,
+        left: '50%', transform: 'translateX(-50%)',
+        width: '100%', maxWidth: 640,
         background: 'var(--surface)',
         borderTop: '1px solid var(--border)',
-        display: 'flex', flexShrink: 0,
+        display: 'flex',
         paddingBottom: 'env(safe-area-inset-bottom)',
+        zIndex: 100,
       }}>
         {NAV.map(tab => {
           const active = activeTab === tab.id
